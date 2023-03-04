@@ -1,7 +1,7 @@
-from random import randint
 import pygame
+import random
 
-# Game Colors
+# Define game colors
 RED = (255, 0, 0)
 GREEN = (0, 255, 51)
 WHITE = (255, 255, 255)
@@ -9,16 +9,14 @@ BLACK = (0, 0, 0)
 LIGHT_BLUE = (80, 80, 255)
 YELLOW = (255, 255, 0)
 
-# Display
+# Initialize pygame and game display
 pygame.init()
 screen = pygame.display.set_mode((500, 500))
 pygame.display.set_caption("Fast Clicker Game")
 clock = pygame.time.Clock()
-screen.fill(LIGHT_BLUE)
 
-
-# Rectangles
-class Rectangles:
+# Create a Rectangle class to represent game elements
+class Rectangle:
     def __init__(self, x, y, width, height):
         self.image = None
         self.rect = pygame.Rect(x, y, width, height)
@@ -26,8 +24,8 @@ class Rectangles:
     def draw(self, color):
         pygame.draw.rect(screen, color, self.rect)
 
-    def set_text(self, text, fsize, x, y):
-        self.image = pygame.font.SysFont('verdana', fsize).render(text, True, BLACK)
+    def set_text(self, text, font_size, x, y):
+        self.image = pygame.font.SysFont('verdana', font_size).render(text, True, BLACK)
         screen.blit(self.image, (x, y))
 
     def draw_text(self, shift_x=0, shift_y=0):
@@ -36,55 +34,60 @@ class Rectangles:
     def collidepoint(self, x, y):
         return self.rect.collidepoint(x, y)
 
-
 # Game Variables
 buttons = []
 wait = 0
 x = 70
-score_game = 0
+score = 0
 
-# Game Score / Time
-score_text = Rectangles(0, 0, 0, 0)
-for _ in range(4):
-    clicker_buttons = Rectangles(x, 90, 70, 100)
-    clicker_buttons.draw(YELLOW)
-    clicker_buttons.set_text('CLICK', 15, x, 90)
-    buttons.append(clicker_buttons)
+# Create game score and time display
+score_display = Rectangle(0, 0, 0, 0)
+
+# Create game buttons
+for i in range(4):
+    button = Rectangle(x, 90, 70, 100)
+    button.draw(YELLOW)
+    button.set_text('CLICK', 15, x, 90)
+    buttons.append(button)
     x += 100
 
+# Game loop
 running = True
 while running:
-    pygame.display.update()
+    # Limit frame rate and update display
     clock.tick(60)
+    pygame.display.update()
+
+    # Update game elements every 20 frames
     if wait == 0:
         screen.fill(LIGHT_BLUE)
-        score_text.set_text(f'Score: {score_game}', 20, 0, 0)
+        score_display.set_text(f'Score: {score}', 20, 0, 0)
         wait = 20
-        click = randint(1, len(buttons))
-        for i in range(len(buttons)):
-            buttons[i].draw(YELLOW)
+        click = random.randint(1, len(buttons))
+
+        # Draw game buttons and highlight one of them
+        for i, button in enumerate(buttons):
             if (i + 1) == click:
-                buttons[i].draw_text(10, 40)
+                button.draw_text(10, 40)
             else:
-                buttons[i].draw(YELLOW)
+                button.draw(YELLOW)
+
     else:
         wait -= 1
 
+    # Check for player input
     for event in pygame.event.get():
-        if (
-                event.type != pygame.QUIT
-                and event.type == pygame.KEYDOWN
-                and event.key == pygame.K_ESCAPE
-                or event.type == pygame.QUIT
-        ):
+        if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
-            for i in range(len(buttons)):
-                if buttons[i].collidepoint(x, y):
+
+            # Check if player clicked the highlighted button
+            for i, button in enumerate(buttons):
+                if button.collidepoint(x, y):
                     if (i + 1) == click:
-                        buttons[i].draw(GREEN)
-                        score_game += 1
+                        button.draw(GREEN)
+                        score += 1
                     else:
-                        buttons[i].draw(RED)
-                        score_game -= 1
+                        button.draw(RED)
+                        score -= 1
